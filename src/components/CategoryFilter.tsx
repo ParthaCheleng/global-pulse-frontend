@@ -1,11 +1,21 @@
-
 import React from 'react';
-import { useNews } from '@/context/NewsContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { categories } from '@/lib/mockData';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const CategoryFilter: React.FC = () => {
-  const { currentCategory, setCurrentCategory } = useNews();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const currentCategory = searchParams.get('category') || 'general';
+
+  const handleCategoryClick = (categoryId: string) => {
+    const params = new URLSearchParams();
+    if (categoryId !== 'all') {
+      params.set('category', categoryId);
+    }
+    navigate(`/?${params.toString()}`);
+  };
 
   return (
     <div className="w-full mb-6">
@@ -14,9 +24,12 @@ const CategoryFilter: React.FC = () => {
           {categories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setCurrentCategory(category.id as any)}
+              onClick={() => handleCategoryClick(category.id)}
               className={`category-pill ${
-                currentCategory === category.id ? 'active' : ''
+                currentCategory === category.id ||
+                (category.id === 'all' && !searchParams.get('category'))
+                  ? 'active'
+                  : ''
               }`}
             >
               {category.name}

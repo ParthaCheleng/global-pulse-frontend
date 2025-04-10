@@ -1,101 +1,79 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Bookmark, Share2, Clock } from 'lucide-react';
+import { Share2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { Article } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ArticleCardProps {
-  article: Article;
+  article: {
+    title: string;
+    description: string;
+    url: string;
+    urlToImage: string;
+    publishedAt: string;
+    source: { name: string };
+  };
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
-  const { isAuthenticated, saveArticle, unsaveArticle, isSaved } = useAuth();
-  
-  const isArticleSaved = isAuthenticated && isSaved(article.id);
-  
-  const handleBookmark = () => {
-    if (isAuthenticated) {
-      if (isArticleSaved) {
-        unsaveArticle(article.id);
-      } else {
-        saveArticle(article.id);
-      }
-    }
-  };
-  
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: article.title,
           text: article.description,
-          url: window.location.origin + `/article/${article.id}`,
+          url: article.url,
         });
       } catch (error) {
         console.log('Error sharing:', error);
       }
     } else {
-      // Fallback for browsers that don't support the Web Share API
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(window.location.origin + `/article/${article.id}`)}`, '_blank');
+      window.open(
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(article.url)}`,
+        '_blank'
+      );
     }
   };
 
   return (
-    <div className="article-card flex flex-col h-full">
+    <div className="article-card flex flex-col h-full rounded-lg shadow-sm border bg-white overflow-hidden">
       <div className="relative">
-        <Link to={`/article/${article.id}`}>
-          <img 
-            src={article.urlToImage} 
-            alt={article.title} 
-            className="article-image"
+        <a href={article.url} target="_blank" rel="noopener noreferrer">
+          <img
+            src={article.urlToImage}
+            alt={article.title}
+            className="article-image w-full h-48 object-cover"
             onError={(e) => {
-              // Fallback image if the article image fails to load
-              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070&auto=format&fit=crop";
+              (e.target as HTMLImageElement).src =
+                'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070&auto=format&fit=crop';
             }}
           />
-        </Link>
-        {article.category && (
-          <span className="absolute top-3 left-3 bg-news-primary text-white text-xs px-2 py-1 rounded-full">
-            {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-          </span>
-        )}
+        </a>
       </div>
-      
+
       <div className="p-4 flex flex-col flex-grow">
-        <Link to={`/article/${article.id}`}>
-          <h3 className="article-title mb-2">{article.title}</h3>
-        </Link>
-        
-        <p className="article-excerpt mb-4">{article.description}</p>
-        
+        <a href={article.url} target="_blank" rel="noopener noreferrer">
+          <h3 className="article-title mb-2 font-semibold text-lg leading-tight">
+            {article.title}
+          </h3>
+        </a>
+
+        <p className="article-excerpt mb-4 text-sm text-gray-600">
+          {article.description}
+        </p>
+
         <div className="mt-auto">
-          <div className="article-meta mb-3">
-            <span className="flex items-center">
-              <Clock size={14} className="mr-1" />
-              {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
-            </span>
+          <div className="article-meta mb-3 text-xs text-gray-500 flex gap-2 items-center">
+            <Clock size={14} className="mr-1" />
+            {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
             <span>•</span>
             <span>{article.source.name}</span>
           </div>
-          
-          <div className="flex justify-between">
+
+          <div className="flex justify-end">
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-gray-600 hover:text-news-primary"
-              onClick={handleBookmark}
-            >
-              <Bookmark size={16} className={isArticleSaved ? "fill-news-primary text-news-primary" : ""} />
-              {isArticleSaved ? 'Saved' : 'Save'}
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 text-gray-600 hover:text-news-primary"
+              className="flex items-center gap-1 text-gray-600 hover:text-blue-600"
               onClick={handleShare}
             >
               <Share2 size={16} />

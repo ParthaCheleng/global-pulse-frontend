@@ -1,21 +1,22 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useNews } from '@/context/NewsContext';
 
 interface SearchBarProps {
   onClose?: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onClose }) => {
-  const { setSearchQuery, searchQuery } = useNews();
-  const [localQuery, setLocalQuery] = useState(searchQuery);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const defaultQuery = searchParams.get('q') || '';
+  const [localQuery, setLocalQuery] = useState(defaultQuery);
+
   useEffect(() => {
-    // Focus input when component mounts
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -23,15 +24,18 @@ const SearchBar: React.FC<SearchBarProps> = ({ onClose }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchQuery(localQuery);
-    if (onClose) {
-      onClose();
+    const trimmed = localQuery.trim();
+    if (trimmed) {
+      navigate(`/?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      navigate(`/`);
     }
+    if (onClose) onClose();
   };
 
   const handleClear = () => {
     setLocalQuery('');
-    setSearchQuery('');
+    navigate(`/`);
     if (inputRef.current) {
       inputRef.current.focus();
     }
